@@ -1,41 +1,41 @@
-FROM node:20 AS build
+FROM node:20 AS base 
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package*.json ./
 
-RUN npm install
+RUN npm i
 
 COPY . .
 
-RUN npx tsc
+RUN npm run build
 
-FROM node:20 AS development
-
-WORKDIR /app
-
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/ ./ 
-
-EXPOSE 1337
-
-ENV PORT=1337
-
-CMD ["npm", "run", "start"]
 
 FROM node:20 AS production
 
 WORKDIR /app
 
-COPY --from=development /app/node_modules ./node_modules
-COPY --from=development /app/ ./ 
+COPY --from=base /app/package*.json /app
 
-RUN rm -rf /app/node_modules/typescript
-RUN rm -rf /app/package.json            
-RUN rm -rf /app/package-lock.json       
+RUN npm install --only=production
+
+COPY --from=base /app/index.js /app/index.js
 
 EXPOSE 1337
 
 ENV PORT=1337
 
-CMD ["node", "./index.js"]
+CMD ["node", "index.js"]
+
+
+FROM node:20 as development
+
+WORKDIR /app
+
+COPY package*.json /app
+
+RUN npm i
+
+COPY . /app
+
+RUN npm run develop

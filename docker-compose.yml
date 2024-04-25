@@ -27,8 +27,8 @@ services:
     hostname: mydocker
     build:
       context: .
-      target: development
       dockerfile: Dockerfile
+      target: production
 
     restart: always
 
