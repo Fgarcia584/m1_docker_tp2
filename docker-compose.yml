@@ -1,0 +1,61 @@
+services:
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_HOST: mysql
+      MYSQL_DATABASE: database
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mysql:/var/lib/mysql
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - 6379:6379
+
+    volumes:
+      - ./redis:/data
+
+  my_app:
+    hostname: mydocker
+    build:
+      context: .
+      target: development
+      dockerfile: Dockerfile
+
+    restart: always
+
+    depends_on:
+      - mysql
+      - redis
+
+    ports:
+      - 8080:1337
+
+    environment:
+      - PORT=1337
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MYSQL_HOST=mysql
+      - MYSQL_DB=database
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+      - MYSQL_PORT=3306
+      - MYSQL_ROOT_PASSWORD=root
+      - FILE_PATH_TO_CHECK=./Dockerfile
+
+    # Montage du volume nommé db_data dans le service
+    # sur chaque container qui le compose
+    volumes:
+      - db_data:/app/bdd.db
+
+volumes:
+  db_data:
+    driver: local
